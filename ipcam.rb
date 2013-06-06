@@ -7,14 +7,12 @@ $FRAME_SEP = "--ipcamera"
 
 class ImageStreamer
     def initialize
-        @chunk_number = 0
         @buffer = ""
     end
     def process_chunk(chunk, &block)
-        @chunk_number += 1
-        boundary = chunk.index($FRAME_SEP)
         chunk.each_line do |line|
             if line.strip.eql?($FRAME_SEP)
+                # strip length header before yielding buffer
                 yield @buffer[2,@buffer.length-1]
                 @buffer = ""
             elsif line.start_with?("Content")
