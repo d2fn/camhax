@@ -2,10 +2,12 @@
 
 require 'net/http'
 require 'securerandom'
+require 'sinatra'
+require 'spawnling'
 
 $FRAME_SEP = "--ipcamera"
 
-class ImageStreamer
+class ImageBuffer
     def initialize
         @buffer = ""
     end
@@ -25,31 +27,50 @@ class ImageStreamer
     end
 end
 
-def main(url, cam_path, user, pass)
-    istreamer = ImageStreamer.new
-    uri = URI(url)
-    Net::HTTP.start(uri.host, uri.port) do |http|
-        size = 0
-        request = Net::HTTP::Get.new(cam_path)
-        request.basic_auth user, pass
-        http.request request do |response|
-            started = false
-            current_image = ""
-            response.read_body do |chunk|
-                istreamer.process_chunk(chunk) do |image|
-                    File.open("image-" + SecureRandom.hex + ".jpg", 'wb') do |f|
-                        f.write(image)
+class ImageStreamer
+    def initialize(cam_url, cam_path, cam_user, cam_pass)
+        @cam_url  = cam_url
+        @cam_path = cam_path
+        @cam_user = cam_user
+        @cam_pass = cam_pass
+    end
+    def run()
+        uri = URI(@cam_url)
+        Net::HTTP.start(uri.host, uri.port) do |http|
+            size = 0
+            request = Net::HTTP::Get.new(@cam_path)
+            request.basic_auth @cam_user, @cam_pass
+            http.request request do |response|
+                image_buf = ImageBuffer.new
+                response.read_body do |chunk|
+                    image_buf.process_chunk(chunk) do |image|
+                        fn = "image-" + SecureRandom.hex + ".jpg"
+                        File.open(fn, 'wb') do |f|
+                            f.write(image)
+                        end
+                        @current_image = image
                     end
                 end
             end
         end
     end
+    def snap
+        @current_image
+    end
 end
 
+cam_url  = ENV['CAM_URL']
+cam_path = ENV['CAM_PATH']
+cam_user = ENV['CAM_USER']
+cam_pass = ENV['CAM_PASS']
 
-cam_url  = ENV['CAMURL']
-cam_path = ENV['CAMPATH']
-cam_user = ENV['CAMUSER']
-cam_pass = ENV['CAMPASS']
+streamer = ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass)
+get '/' do
+    content_type 'image/jpg'
+    streamer.snap
+end
 
-main(cam_url, cam_path, cam_user, cam_pass)
+Spawnling.new(:method => :threading) do
+    streamer.run
+end
+
