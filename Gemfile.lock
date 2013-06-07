@@ -9,7 +9,6 @@ GEM
       rack (~> 1.5, >= 1.5.2)
       rack-protection (~> 1.4)
       tilt (~> 1.3, >= 1.3.4)
-    spawnling (2.1.1)
     tilt (1.4.1)
 
 PLATFORMS
@@ -18,4 +17,3 @@ PLATFORMS
 DEPENDENCIES
   rmagick
   sinatra
-  spawnling (~> 2.0)
