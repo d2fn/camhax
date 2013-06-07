@@ -77,11 +77,11 @@ module CamHax
         # return an in-order array of current frames
         def frames
             latest_frames = Array.new(@frames.length)
-            ptr = @frame_ptr
+            ptr = @frame_ptr + 1
             @frames.length.times do |i|
                 frame = @frames[ptr % @frames.length]
                 latest_frames[i] = frame unless frame.nil?
-                ptr -= 1
+                ptr += 1
             end
             latest_frames
         end
@@ -99,7 +99,7 @@ module CamHax
                 end
                 result = yield filenames
             rescue
-                puts "error during writing temp files"
+                puts "error writing temp files"
             end
             filenames.each do |fn|
                 File.unlink(fn) unless fn.nil?
