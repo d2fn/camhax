@@ -113,8 +113,15 @@ cam_url  = ENV['CAM_URL']
 cam_path = ENV['CAM_PATH']
 cam_user = ENV['CAM_USER']
 cam_pass = ENV['CAM_PASS']
+shared_secret = ENV['SHARED_SECRET']
 
 streamer = CamHax::ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass, 10)
+
+before '/*' do
+    if !shared_secret.nil?
+        halt 401 unless params[:secret].eql?(shared_secret)
+    end
+end
 
 get '/latest.jpg' do
     content_type 'image/jpg'
