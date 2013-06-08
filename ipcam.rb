@@ -47,7 +47,7 @@ module CamHax
                 request = Net::HTTP::Get.new(@cam_path)
                 request.basic_auth @cam_user, @cam_pass
                 http.request request do |response|
-                    image_buf = ImageBuffer.new
+                    image_buf = ImageBuffe
                     response.read_body do |chunk|
                         image_buf.process_chunk(chunk) do |image|
                             unless image.nil?
@@ -116,6 +116,8 @@ cam_pass = ENV['CAM_PASS']
 shared_secret = ENV['SHARED_SECRET']
 
 streamer = CamHax::ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass, 10)
+
+set :bind, "0.0.0.0"
 
 before '/*' do
     if !shared_secret.nil?
