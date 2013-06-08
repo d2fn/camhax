@@ -47,7 +47,7 @@ module CamHax
                 request = Net::HTTP::Get.new(@cam_path)
                 request.basic_auth @cam_user, @cam_pass
                 http.request request do |response|
-                    image_buf = ImageBuffe
+                    image_buf = ImageBuffer.new
                     response.read_body do |chunk|
                         image_buf.process_chunk(chunk) do |image|
                             unless image.nil?
@@ -143,6 +143,7 @@ get '/latest.gif' do
     image
 end
 
+Thread.abort_on_exception = true
 Thread.new do
     streamer.run
 end
