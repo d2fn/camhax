@@ -50,9 +50,7 @@ module CamHax
                     image_buf = ImageBuffer.new
                     response.read_body do |chunk|
                         image_buf.process_chunk(chunk) do |image|
-                            unless image.nil?
-                                save_snap(image)
-                            end
+                            save_snap(image) unless image.nil?
                         end
                     end
                 end
