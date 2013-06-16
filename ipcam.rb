@@ -7,6 +7,7 @@ require 'thread'
 require 'RMagick'
 
 $FRAME_SEP = "--ipcamera"
+$RETRY_INTERVAL = 10 # seconds
 
 module CamHax
   class ImageBuffer
@@ -42,18 +43,26 @@ module CamHax
 
     def run()
       uri = URI(@cam_url)
-      Net::HTTP.start(uri.host, uri.port) do |http|
-        size = 0
-        request = Net::HTTP::Get.new(@cam_path)
-        request.basic_auth @cam_user, @cam_pass
-        http.request request do |response|
-          image_buf = ImageBuffer.new
-          response.read_body do |chunk|
-            image_buf.process_chunk(chunk) do |image|
-              save_snap(image) unless image.nil?
+      while true do
+        begin
+          Net::HTTP.start(uri.host, uri.port) do |http|
+            puts "Connected to camera at %s" % uri.to_s
+            size = 0
+            request = Net::HTTP::Get.new(@cam_path)
+            request.basic_auth @cam_user, @cam_pass
+            http.request request do |response|
+              image_buf = ImageBuffer.new
+              response.read_body do |chunk|
+                image_buf.process_chunk(chunk) do |image|
+                  save_snap(image) unless image.nil?
+                end
+              end
             end
           end
+        rescue
+          puts "Lost connection to camera. Will try to re-establish in %d seconds." % $RETRY_INTERVAL
         end
+        sleep $RETRY_INTERVAL
       end
     end
 
@@ -113,7 +122,9 @@ cam_user = ENV['CAM_USER']
 cam_pass = ENV['CAM_PASS']
 shared_secret = ENV['SHARED_SECRET']
 
-streamer = CamHax::ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass, 10)
+num_frames = 10
+
+streamer = CamHax::ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass, num_frames)
 
 set :bind, "0.0.0.0"
 
