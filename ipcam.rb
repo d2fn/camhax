@@ -107,9 +107,10 @@ module CamHax
         result = yield filenames
       rescue
         puts "error writing temp files"
-      end
-      filenames.each do |fn|
-        File.unlink(fn) unless fn.nil?
+      ensure
+        filenames.each do |fn|
+          File.unlink(fn) unless fn.nil?
+        end
       end
       result
     end
@@ -142,13 +143,16 @@ end
 get '/latest.gif' do
   content_type 'image/gif'
   outfile = "/tmp/#{SecureRandom.hex}.gif"
-  streamer.with_image_files do |image_files|
-    animation = Magick::ImageList.new(*image_files)
-    animation.delay = 10
-    animation.write(outfile)
+  begin
+    streamer.with_image_files do |image_files|
+      animation = Magick::ImageList.new(*image_files)
+      animation.delay = 10
+      animation.write(outfile)
+    end
+    image = File.read(outfile)
+  ensure
+    File.unlink(outfile)
   end
-  image = File.read(outfile)
-  File.unlink(outfile)
   image
 end
 
