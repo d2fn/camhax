@@ -160,4 +160,3 @@ Thread.abort_on_exception = true
 Thread.new do
   streamer.run
 end
-
