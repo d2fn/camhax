@@ -123,7 +123,7 @@ cam_user = ENV['CAM_USER']
 cam_pass = ENV['CAM_PASS']
 shared_secret = ENV['SHARED_SECRET']
 
-num_frames = 10
+num_frames = 5
 
 streamer = CamHax::ImageStreamer.new(cam_url, cam_path, cam_user, cam_pass, num_frames)
 
